@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body{
+            overflow: hidden;
+            touch-action: none;
+            padding: 0 10px 0 10px;
+
+            background-size: 40%;
+            background-repeat: no-repeat;
+            background-position: right bottom;
+        }
+    </style>
+</head>
+<body>
+    <h2>Waifu Camera</h2>
+    <sub style="float: right;">v1.1 by shiro hana</sub><br>
+    <hr>
+    <p>Open-Source librarys used:</p>
+    <ul>
+        <li><b><a href="https://github.com/xxinPro/FileSelector" target="_blank">FileSelector</a></b> by xxinPro</li>
+        <li><b><a href="https://github.com/bumptech/glide" target="_blank">Glide</a></li>
+    </ul>
+    <hr>
+    <p>Made with love for <a>Naruse Shiroha</a>.</p>
+    
+    <script>
+        var times = 0;
+        document.querySelectorAll("a")[2].addEventListener("click",function(){
+            if (times == 20){
+                document.body.style.backgroundImage = 'url("https://t.vndb.org/ch/37/82437.jpg")';
+            }
+            times++;
+        });
+    </script>
+</body>
+</html>

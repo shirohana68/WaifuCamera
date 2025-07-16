@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="title_home">Home</string>
+    <string name="title_photograph">Shot</string>
+    <string name="title_notifications">Settings</string>
+    <string name="addLibAndSelectRequst">Please select at least one image library and select one image</string>
+    <string name="addLibRequst">Please select at least one image library</string>
+    <string name="fullScreenButton">Full Screen</string>
+    <string name="savePhotoFailed">Photo save failed</string>
+    <string name="picture">Picture</string>
+    <string name="hasSaved">has saved</string>
+    <string name="add">add</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="name">Name</string>
+    <string name="path">Path</string>
+    <string name="delete">Delete</string>
+    <string name="confirmDelete">Are you sure to delete the folders below</string>
+    <string name="restore">Restore</string>
+    <string name="confirmRestore">Are you sure to restore the original setting</string>
+    <string name="shot">shot</string>
+    <string name="switchCamera">Switch Cam</string>
+    <string name="fgimageLib">Image Library</string>
+    <string name="singleSettings">Single Settings</string>
+    <string name="save">Save</string>
+    <string name="title_table">Table</string>
+    <string name="favor">Favourites</string>
+    <string name="confirmDeleteFavor">Are you sure to delete this favor</string>
+    <string name="menuDialogHeadline">What do you want to do to this item</string>
+    <string name="edit">Edit</string>
+    <string name="toFirst">Make it first place</string>
+    <string name="toLast">Make it last place</string>
+    <string name="favorItem">Favor</string>
+    <string name="addedToFavor">Added to favourites</string>
+    <string name="existInFavor">This item is already in the favourites</string>
+    <string name="toggle">Toggle</string>
+    <string name="fileNotFound">File NOT FOUND</string>
+    <string name="selectFile">Select</string>
+    <string name="guide">Guide</string>
+    <string name="about">About</string>
+</resources>
