@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -32,7 +33,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.shiroha.waifucamera.databinding.ActivityMainBinding;
-import com.shiroha.waifucamera.ui.photograph.PhotographFragment;
+import com.shiroha.waifucamera.ui.PhotographFragment;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -312,7 +313,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     JSONObject settingObj;
 
     public boolean getLocationServiceAvailablity(){
-        return locationManager.getAllProviders().contains(LocationManager.NETWORK_PROVIDER);
+        if (locationManager.getAllProviders().contains(LocationManager.NETWORK_PROVIDER) && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+            return true;
+        }
+        else {
+            return false;
+        }
     }
     public double[] getLocation() {
 
@@ -350,6 +356,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     //@Override
     public void onProviderDisabled(@NonNull String provider) {
         Log.e("onProviderDisabled", provider);
+    }
+
+    @Override
+    public void onBackPressed() {
+        // 这里处理逻辑代码，大家注意：该方法仅适用于2.0或更新版的sdk
+        super.onBackPressed();
+        findViewById(R.id.nav_view).setVisibility(View.VISIBLE);
+        return;
     }
 
 }

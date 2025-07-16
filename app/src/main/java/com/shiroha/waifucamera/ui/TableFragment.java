@@ -30,7 +30,6 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -42,10 +41,8 @@ import androidx.camera.core.ImageCapture;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -56,7 +53,6 @@ import com.shiroha.waifucamera.FgLibAdapter;
 import com.shiroha.waifucamera.MainActivity;
 import com.shiroha.waifucamera.R;
 import com.shiroha.waifucamera.databinding.FragmentTableBinding;
-import com.shiroha.waifucamera.ui.photograph.PhotographFragment;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -896,6 +892,7 @@ public class TableFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+
         isFragmentVisible = true; // 标记Fragment可见
 
         if (getActivity() != null && getActivity().getWindow() != null) {
@@ -923,6 +920,8 @@ public class TableFragment extends Fragment {
         }
 
     }
+
+
 
     @Override
     public void onDestroyView() {

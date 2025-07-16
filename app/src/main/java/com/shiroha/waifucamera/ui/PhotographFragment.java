@@ -1,4 +1,6 @@
-package com.shiroha.waifucamera.ui.photograph;
+package com.shiroha.waifucamera.ui;
+
+import static androidx.core.content.ContextCompat.getSystemService;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -15,11 +17,12 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.media.ExifInterface;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -44,14 +47,12 @@ import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.shiroha.waifucamera.CustomAdapter;
@@ -70,12 +71,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -164,8 +163,6 @@ public class PhotographFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        PhotographViewModel photographViewModel =
-                new ViewModelProvider(this).get(PhotographViewModel.class);
 
         binding = FragmentPhotographBinding.inflate(inflater, container, false);
         return binding.getRoot();
@@ -250,10 +247,10 @@ public class PhotographFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        PhotographViewModel photographViewModel =
+        /*PhotographViewModel photographViewModel =
                 new ViewModelProvider(this).get(PhotographViewModel.class);
 
-        /*final TextView textView = binding.fullscreenContent;
+        final TextView textView = binding.fullscreenContent;
         photographViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
 
         mVisible = true;
@@ -1038,39 +1035,52 @@ public class PhotographFragment extends Fragment {
         }
         //int orientation = getResources().getConfiguration().orientation;
         Bitmap bitmap;
-        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-            if (bitmapOrg.getWidth() >= bitmapOrg.getHeight() * cameraAspectRatio) {
-                bitmap = Bitmap.createBitmap(bitmapOrg,
-                        (int) (bitmapOrg.getWidth() / 2 - (bitmapOrg.getHeight() * cameraAspectRatio) / 2),
-                        0,
-                        (int) (bitmapOrg.getHeight() * cameraAspectRatio),
-                        bitmapOrg.getHeight()
-                );
-            } else {
-                bitmap = Bitmap.createBitmap(bitmapOrg,
-                        0,
-                        0,
-                        bitmapOrg.getWidth(),
-                        (int) (bitmapOrg.getWidth() * cameraAspectRatio)
-                );
-            }
-        }
-        else {
-            if (bitmapOrg.getHeight() >= bitmapOrg.getWidth() * cameraAspectRatio) {
-                bitmap = Bitmap.createBitmap(bitmapOrg,
-                        0,
-                        (int) (bitmapOrg.getHeight() / 2 - (bitmapOrg.getWidth() * cameraAspectRatio) / 2),
-                        bitmapOrg.getHeight(),
-                        (int) (bitmapOrg.getHeight() * cameraAspectRatio)
-                );
-            } else {
-                bitmap = Bitmap.createBitmap(bitmapOrg,
-                        0,
-                        0,
-                        (int) (bitmapOrg.getHeight() * cameraAspectRatio),
-                        bitmapOrg.getHeight()
-                );
-            }
+
+        switch (orientation){
+            case Configuration.ORIENTATION_PORTRAIT:
+                switch (String.valueOf(cameraAspectRatio)){
+                    case "1.0":
+                        bitmap = Bitmap.createBitmap(bitmapOrg,
+                                0,
+                                (bitmapOrg.getHeight() - bitmapOrg.getWidth()) / 2,
+                                bitmapOrg.getWidth(),
+                                bitmapOrg.getWidth()
+                        );
+                        break;
+                    default:
+                        int newWidth = (int) (bitmapOrg.getHeight() * cameraAspectRatio);
+                        bitmap = Bitmap.createBitmap(bitmapOrg,
+                                (bitmapOrg.getWidth() - newWidth) / 2,
+                                0,
+                                newWidth,
+                                bitmapOrg.getHeight()
+                        );
+                        break;
+                }
+                break;
+            case Configuration.ORIENTATION_LANDSCAPE:
+                switch (String.valueOf(cameraAspectRatio)){
+                    case "1.0":
+                        bitmap = Bitmap.createBitmap(bitmapOrg,
+                                (bitmapOrg.getWidth() - bitmapOrg.getHeight()) / 2,
+                                0,
+                                bitmapOrg.getHeight(),
+                                bitmapOrg.getHeight()
+                        );
+                        break;
+                    default:
+                        int newHeight = (int) (bitmapOrg.getWidth() * cameraAspectRatio);
+                        bitmap = Bitmap.createBitmap(bitmapOrg,
+                                0,
+                                (bitmapOrg.getHeight() - newHeight) / 2,
+                                bitmapOrg.getWidth(),
+                                newHeight
+                        );
+                        break;
+                }
+                break;
+            default:
+                bitmap = bitmapOrg;
         }
 
         // 创建一个新的 Bitmap，尺寸和原始图像相同
@@ -1135,6 +1145,20 @@ public class PhotographFragment extends Fragment {
             fos.close();
 
             String imagePath = outputDirectory + "/" + photoName;
+
+            Vibrator vibrator = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+            if (vibrator != null && vibrator.hasVibrator()) {
+                // API 26+ (Android 8.0+) 推荐方式
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    vibrator.vibrate(
+                            VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE)
+                    );
+                }
+                // 旧版本方式
+                else {
+                    vibrator.vibrate(100);
+                }
+            }
 
             String toastTexts = context.getString(R.string.picture);
             if (settingObj.getBoolean("exif")){

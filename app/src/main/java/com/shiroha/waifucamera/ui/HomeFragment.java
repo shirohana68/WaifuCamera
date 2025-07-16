@@ -1,10 +1,9 @@
-package com.shiroha.waifucamera.ui.home;
+package com.shiroha.waifucamera.ui;
 
 import static com.shiroha.waifucamera.ImagePreviewUtil.previewImageWithSpecificApp;
 
 import android.app.AlertDialog;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,9 +25,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.shiroha.waifucamera.CustomAdapter;
-import com.shiroha.waifucamera.ImagePreviewUtil;
 import com.shiroha.waifucamera.MainActivity;
 import com.shiroha.waifucamera.R;
 import com.shiroha.waifucamera.databinding.FragmentHomeBinding;
@@ -44,7 +41,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -67,8 +63,6 @@ public class HomeFragment extends Fragment {
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        HomeViewModel homeViewModel =
-                new ViewModelProvider(this).get(HomeViewModel.class);
 
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();

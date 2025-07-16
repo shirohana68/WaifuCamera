@@ -7,13 +7,13 @@
 
     <fragment
         android:id="@+id/navigation_home"
-        android:name="com.shiroha.waifucamera.ui.home.HomeFragment"
+        android:name="com.shiroha.waifucamera.ui.HomeFragment"
         android:label="@string/title_home"
         tools:layout="@layout/fragment_home" />
 
     <fragment
         android:id="@+id/navigation_photograph"
-        android:name="com.shiroha.waifucamera.ui.photograph.PhotographFragment"
+        android:name="com.shiroha.waifucamera.ui.PhotographFragment"
         android:label="@string/title_photograph"
         tools:layout="@layout/fragment_photograph" />
 
@@ -25,7 +25,7 @@
 
     <fragment
         android:id="@+id/navigation_notifications"
-        android:name="com.shiroha.waifucamera.ui.notifications.NotificationsFragment"
+        android:name="com.shiroha.waifucamera.ui.NotificationsFragment"
         android:label="@string/title_notifications"
         tools:layout="@layout/fragment_notifications" />
 </navigation>
