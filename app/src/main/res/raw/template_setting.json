@@ -6,6 +6,18 @@
     "description": "限制立绘超出程度"
   },
   {
+    "name": "volumnButtonCapture",
+    "defaultValue": true,
+    "valueType": "boolean",
+    "description": "使用音量键来拍照"
+  },
+  {
+    "name": "photoNameFormat",
+    "defaultValue": "yyyyMMdd_HHmmss",
+    "valueType": "string",
+    "description": "图片文件名格式"
+  },
+  {
     "name": "timeWatermark",
     "defaultValue": false,
     "valueType": "boolean",
@@ -16,18 +28,6 @@
     "defaultValue": "yyyy/MM/dd HH:mm:ss",
     "valueType": "string",
     "description": "时间水印格式"
-  },
-  {
-    "name": "photoNameFormat",
-    "defaultValue": "yyyyMMdd_HHmmss",
-    "valueType": "string",
-    "description": "图片文件名格式"
-  },
-  {
-    "name": "showClock",
-    "defaultValue": true,
-    "valueType": "boolean",
-    "description": "在桌面模式下显示一个时钟"
   },
   {
     "name": "gps",
@@ -46,5 +46,11 @@
     "defaultValue": false,
     "valueType": "boolean",
     "description": "保存原始照片"
+  },
+  {
+    "name": "showClock",
+    "defaultValue": true,
+    "valueType": "boolean",
+    "description": "在桌面模式下显示一个时钟"
   }
 ]

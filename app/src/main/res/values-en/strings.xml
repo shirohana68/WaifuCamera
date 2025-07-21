@@ -38,4 +38,5 @@
     <string name="selectFile">Select</string>
     <string name="guide">Guide</string>
     <string name="about">About</string>
+    <string name="switchFlash">Flash</string>
 </resources>

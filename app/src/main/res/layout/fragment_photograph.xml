@@ -8,19 +8,6 @@
     android:layout_height="match_parent"
     tools:context=".ui.PhotographFragment">
 
-    <!-- The primary full-screen view. This can be replaced with whatever view
-         is needed to present your content, e.g. VideoView, SurfaceView,
-         TextureView, etc.
-    <TextView android:id="@+id/fullscreen_content"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:keepScreenOn="true"
-        android:textStyle="bold"
-        android:textSize="50sp"
-        android:textColor="?attr/fullscreenTextColor"
-        android:gravity="center"
-        android:text="@string/dummy_content" />-->
-
     <FrameLayout
         android:id="@+id/previewContainer"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -44,31 +31,68 @@
             tools:srcCompat="@drawable/ic_launcher_foreground" />
     </FrameLayout>
 
-
-
     <LinearLayout
         android:id="@+id/centerLayer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#80000000"
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent">
+
+    <LinearLayout
+        android:id="@+id/centerLayerInner1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="TextView"
+            android:visibility="invisible"/>
+
+        <ImageButton
+            android:id="@+id/switchFlashButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/flash_off_128dp_434343_fill0_wght400_grad0_opsz48"/>
+
+        <ImageButton
+            android:id="@+id/switchCameraButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/cameraswitch_128dp_434343_fill0_wght400_grad0_opsz48"
+            android:text="@string/switchCamera" />
+
+        <Button
+            android:id="@+id/changeAspectRatioButton"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxWidth="2dp"
+            android:text="4/3" />
+
+    </LinearLayout>
 
         <SeekBar
             android:id="@+id/seekBar"
             android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:max="100"
-        android:min="20"
-        android:progress="100"
-        android:secondaryProgress="100"/>
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:max="100"
+            android:min="20"
+            android:progress="100"
+            android:secondaryProgress="100"/>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/fgLibRecycler"
             android:layout_width="wrap_content"
             android:layout_height="180px"
             android:orientation="horizontal"
+            android:background="#80000000"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
@@ -77,6 +101,7 @@
             android:layout_width="match_parent"
             android:layout_height="450px"
             android:orientation="horizontal"
+            android:background="#80000000"
             app:layout_constraintBottom_toTopOf="parent"
             app:layout_constraintStart_toEndOf="@+id/fgLibRecycler" />
 
@@ -88,74 +113,23 @@
             app:layout_constraintBottom_toBottomOf="parent">
 
             <Button
-                android:id="@+id/switchCameraButton"
-                style="@style/Widget.AppCompat.Button.Colored"
-                android:layout_width="wrap_content"
-                android:layout_weight="1.0"
-                android:layout_height="wrap_content"
-                android:text="@string/switchCamera" />
-
-            <Button
                 android:id="@+id/takePhotoButton"
                 style="@style/Widget.AppCompat.Button.Colored"
                 android:layout_width="wrap_content"
-                android:layout_weight="3.0"
+                android:layout_weight="1.0"
                 android:layout_height="wrap_content"
                 android:text="@string/shot" />
 
-            <Button
-                android:id="@+id/changeAspectRatioButton"
-                style="@style/Widget.AppCompat.Button.Colored"
-                android:layout_width="wrap_content"
-                android:layout_weight="1.0"
-                android:layout_height="wrap_content"
-                android:maxWidth="2dp"
-                android:text="4/3" />
-
-            <!--<Button
-                android:id="@+id/settingButton"
-                style="@style/Widget.Material3.FloatingActionButton.Primary"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:maxWidth="5dp"
-                android:onClick="onSettingButtonClick"
-                android:text="Setting" />-->
-
         </LinearLayout>
 
-        <Button
-            android:id="@+id/button"
+        <TextView
+            android:id="@+id/textView3"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Button"
+            android:layout_height="56dp"
+            android:text="TextView"
             android:visibility="invisible"/>
+
+
     </LinearLayout>
-
-
-
-    <!-- This FrameLayout insets its children based on system windows using
-         android:fitsSystemWindows.
-    <FrameLayout android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
-
-        <LinearLayout android:id="@+id/fullscreen_content_controls"
-            style="@style/Widget.Theme.WaifuCamera.ButtonBar.Fullscreen"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center_horizontal"
-            android:orientation="horizontal"
-            tools:ignore="UselessParent">
-
-            <Button android:id="@+id/dummy_button"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/dummy_button" />
-
-        </LinearLayout>
-    </FrameLayout>-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

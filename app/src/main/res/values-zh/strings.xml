@@ -38,4 +38,5 @@
     <string name="selectFile">选择</string>
     <string name="guide">使用说明</string>
     <string name="about">关于</string>
+    <string name="switchFlash">闪光灯</string>
 </resources>

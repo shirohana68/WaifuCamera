@@ -36,8 +36,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.Camera;
+import androidx.camera.core.CameraControl;
 import androidx.camera.core.CameraSelector;
+import androidx.camera.core.FocusMeteringAction;
 import androidx.camera.core.ImageCapture;
+import androidx.camera.core.MeteringPoint;
+import androidx.camera.core.MeteringPointFactory;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
@@ -69,6 +74,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -157,6 +163,8 @@ public class TableFragment extends Fragment {
 
     private PreviewView previewView;
     private Preview preview;
+    private Camera camera;
+    private Executor executor = Executors.newSingleThreadExecutor();
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
     ProcessCameraProvider cameraProvider;
     FrameLayout previewContainer;
@@ -166,7 +174,7 @@ public class TableFragment extends Fragment {
     private ExecutorService cameraExecutor;
     private ImageCapture imageCapture;
 
-    private File outputDirectory;
+    private boolean isFlashOn = false;
 
 
     Bitmap currentBmp;
@@ -252,10 +260,15 @@ public class TableFragment extends Fragment {
 
         loadWeb();
 
+        binding.switchFlashButton.setOnClickListener(v -> onswitchFlashButtonClick(v));
         binding.switchCameraButton.setOnClickListener(v -> onSwitchCameraButtonClick(v));
         binding.toggleButton.setOnClickListener(v -> onToggleClick(v));
         binding.previewView.setOnLongClickListener(v -> onToggleClick(v));
 
+        setupTouchEvents();
+    }
+
+    private void setupTouchEvents(){
         final boolean[] isScaling = {false}; // 是否正在缩放
         final long[] touchStartTime = new long[1];
 
@@ -372,16 +385,49 @@ public class TableFragment extends Fragment {
                         int touchSlop = ViewConfiguration.get(v.getContext()).getScaledTouchSlop();
 
                         // 满足长按条件：时间超过阈值且移动距离在允许范围内
-                        if (pressDuration >= 600 &&
+                        /*if (pressDuration >= 600 &&
                                 moveX < touchSlop && moveY < touchSlop) {
                             // 执行长按操作
                             onToggleClick(v);
+                        }*/
+                        if (moveX < touchSlop && moveY < touchSlop){
+                            if (pressDuration >= 600){
+                                onToggleClick(v);
+                            }
+                            else {
+                                performTapToFocus(event.getX(),event.getY());
+                            }
                         }
+
+
                         break;
                 }
                 return true;
             }
         });
+    }
+
+    private void performTapToFocus(float x, float y) {
+        if (camera == null) return;
+
+        CameraControl cameraControl = camera.getCameraControl();
+
+        // 1. 创建计量点工厂（基于预览视图）
+        MeteringPointFactory factory = previewView.getMeteringPointFactory();
+
+        // 2. 创建计量点（将屏幕坐标转换为相机坐标系）
+        MeteringPoint point = factory.createPoint(x, y);
+
+        // 3. 创建对焦动作（带超时时间）
+        FocusMeteringAction action = new FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
+                .setAutoCancelDuration(2, java.util.concurrent.TimeUnit.SECONDS)
+                .build();
+
+        // 4. 触发对焦
+        cameraControl.startFocusAndMetering(action)
+                .addListener(() -> {
+                    // 对焦成功
+                }, executor);
     }
 
     // 继承自Object类
@@ -801,7 +847,7 @@ public class TableFragment extends Fragment {
                 .build();
         //Toast.makeText(context, Integer.toString(facingLocal), Toast.LENGTH_SHORT).show();
 
-        cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture);
+        camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture);
 
         preview.setSurfaceProvider(previewView.getSurfaceProvider());
     }
@@ -833,15 +879,33 @@ public class TableFragment extends Fragment {
     public void onSwitchCameraButtonClick(View view) {
         if (facing == 1){
             facing = 0;
+            binding.switchFlashButton.setVisibility(View.INVISIBLE);
         }
         else if(facing == 0){
             facing = 1;
+            binding.switchFlashButton.setVisibility(View.VISIBLE);
         }
         cameraProviderFuture.addListener(() -> {
             cameraProvider.unbind(preview, imageCapture);
             initializeCamera();
         }, ContextCompat.getMainExecutor((requireContext())));
         saveEnv();
+    }
+
+    public void onswitchFlashButtonClick(View view) {
+        if (camera == null) return;
+
+        CameraControl cameraControl = camera.getCameraControl();
+        isFlashOn = !isFlashOn;
+
+        // 启用/禁用闪光灯
+        cameraControl.enableTorch(isFlashOn);
+
+        if (isFlashOn) {
+            binding.switchFlashButton.setImageResource(R.drawable.flash_on_128dp_434343_fill0_wght400_grad0_opsz48); // 闪光灯开启图标
+        } else {
+            binding.switchFlashButton.setImageResource(R.drawable.flash_off_128dp_434343_fill0_wght400_grad0_opsz48); // 闪光灯关闭图标
+        }
     }
 
     private void bindViews() {

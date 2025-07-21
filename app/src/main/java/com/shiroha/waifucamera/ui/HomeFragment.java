@@ -21,7 +21,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -77,6 +76,9 @@ public class HomeFragment extends Fragment {
         favorFileName = dataPath + "/favor.json";
 
         context = this;
+
+        /*CameraPerspectiveView cameraView = new CameraPerspectiveView(getContext());
+        cameraView.setRotationX(20f);*/
 
         return root;
     }

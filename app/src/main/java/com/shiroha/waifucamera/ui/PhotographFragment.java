@@ -1,7 +1,5 @@
 package com.shiroha.waifucamera.ui;
 
-import static androidx.core.content.ContextCompat.getSystemService;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -25,9 +23,11 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.util.Log;
 import android.view.Display;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -41,15 +41,19 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.Camera;
+import androidx.camera.core.CameraControl;
 import androidx.camera.core.CameraSelector;
+import androidx.camera.core.FocusMeteringAction;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureException;
+import androidx.camera.core.MeteringPoint;
+import androidx.camera.core.MeteringPointFactory;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -79,6 +83,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -158,15 +163,7 @@ public class PhotographFragment extends Fragment {
         return false;
     };
 
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
 
-        binding = FragmentPhotographBinding.inflate(inflater, container, false);
-        return binding.getRoot();
-    }
 
     /* my global */
 
@@ -179,6 +176,8 @@ public class PhotographFragment extends Fragment {
 
     private PreviewView previewView;
     private Preview preview;
+    private Camera camera;
+    private Executor executor = Executors.newSingleThreadExecutor();
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
     ProcessCameraProvider cameraProvider;
     FrameLayout previewContainer;
@@ -217,8 +216,37 @@ public class PhotographFragment extends Fragment {
     String settingFileName;
 
     String currentFgLibPath;
+    private boolean isFlashOn = false;
 
     private OnListener mListener;
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+
+        dataPath = Objects.requireNonNull(((MainActivity) getActivity()).getExternalFilesDir("")).getAbsolutePath();
+        fgLibFileName = dataPath + "/fglib.json";
+        envFileName = dataPath + "/env.json";
+        settingFileName = dataPath + "/setting.json";
+        favorFileName = dataPath + "/favor.json";
+
+        loadSetting();
+
+        binding = FragmentPhotographBinding.inflate(inflater, container, false);
+        View rootView = binding.getRoot();
+
+        try {
+            if (settingObj.getBoolean("volumnButtonCapture")) {
+                setupVolumeKeyListeners(rootView);
+            }
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+
+        return rootView;
+    }
 
     @Override
     public void onAttach(Context context) {
@@ -247,31 +275,12 @@ public class PhotographFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        /*PhotographViewModel photographViewModel =
-                new ViewModelProvider(this).get(PhotographViewModel.class);
+        view.setFocusableInTouchMode(true);
+        view.requestFocus();
 
-        final TextView textView = binding.fullscreenContent;
-        photographViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
-
-        mVisible = true;
-        mControlsView = binding.fullscreenContentControls;
-        mContentView = binding.fullscreenContent;
-
-        mContentView.setOnClickListener(v -> toggle());
-        binding.dummyButton.setOnTouchListener(mDelayHideTouchListener);*/
         previewView = binding.previewView;
         previewContainer = binding.previewContainer;
 
-        dataPath = Objects.requireNonNull(((MainActivity) getActivity()).getExternalFilesDir("")).getAbsolutePath();
-        fgLibFileName = dataPath + "/fglib.json";
-        envFileName = dataPath + "/env.json";
-        settingFileName = dataPath + "/setting.json";
-        favorFileName = dataPath + "/favor.json";
-
-        /*DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        screenWidth = displayMetrics.widthPixels;
-        screenHeight = displayMetrics.heightPixels;*/
         WindowManager windowManager = (WindowManager) ((MainActivity) getActivity()).getSystemService(Context.WINDOW_SERVICE);
         Display defaultDisplay = windowManager.getDefaultDisplay();
         Point outPoint = new Point();
@@ -289,7 +298,7 @@ public class PhotographFragment extends Fragment {
             seekBarLayout.bottomMargin = seekBarLayout.width / 2 - 40;
         }
 
-        loadSetting();
+
 
         initializeCamera();
 
@@ -304,12 +313,16 @@ public class PhotographFragment extends Fragment {
         loadFavor();
         loadEnv();
 
-        binding.takePhotoButton.setOnClickListener(v -> onTakePhotoButtonClick(v));
+        binding.switchFlashButton.setOnClickListener(v -> onswitchFlashButtonClick(v));
+        binding.takePhotoButton.setOnClickListener(v -> onTakePhotoButtonClick());
         binding.switchCameraButton.setOnClickListener(v -> onSwitchCameraButtonClick(v));
         binding.changeAspectRatioButton.setOnClickListener(v -> onChangeAspectRatioButtonClick(v));
 
-        final boolean[] isScaling = {false}; // 是否正在缩放
+        setupPreviewEvents();
+    }
 
+    private void setupPreviewEvents(){
+        final boolean[] isScaling = {false}; // 是否正在缩放
         previewContainer.setOnTouchListener(new View.OnTouchListener() {
             @SuppressLint("ClickableViewAccessibility")
             @Override
@@ -408,6 +421,16 @@ public class PhotographFragment extends Fragment {
                         scale = (double) imageView.getWidth() / (double) currentBmp.getWidth();
 
                         saveEnv();
+
+                        float moveX = Math.abs(event.getX() - startPoint[0]);
+                        float moveY = Math.abs(event.getY() - startPoint[1]);
+                        int touchSlop = ViewConfiguration.get(v.getContext()).getScaledTouchSlop();
+
+                        // 满足长按条件：时间超过阈值且移动距离在允许范围内
+                        if (moveX < touchSlop && moveY < touchSlop) {
+                            // 执行长按操作
+                            performTapToFocus(event.getX(),event.getY());
+                        }
 
                         break;
                 }
@@ -895,11 +918,35 @@ public class PhotographFragment extends Fragment {
             try {
                 cameraProvider = cameraProviderFuture.get();
                 bindPreview(cameraProvider,facing);
+                //setupTapToFocus();
                 adjustPreviewSize();
             } catch (ExecutionException | InterruptedException e) {
                 Log.e("CameraXApp", "Error binding camera", e);
             }
         }, ContextCompat.getMainExecutor((requireContext())));
+    }
+
+    private void performTapToFocus(float x, float y) {
+        if (camera == null) return;
+
+        CameraControl cameraControl = camera.getCameraControl();
+
+        // 1. 创建计量点工厂（基于预览视图）
+        MeteringPointFactory factory = previewView.getMeteringPointFactory();
+
+        // 2. 创建计量点（将屏幕坐标转换为相机坐标系）
+        MeteringPoint point = factory.createPoint(x, y);
+
+        // 3. 创建对焦动作（带超时时间）
+        FocusMeteringAction action = new FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
+                .setAutoCancelDuration(2, java.util.concurrent.TimeUnit.SECONDS)
+                .build();
+
+        // 4. 触发对焦
+        cameraControl.startFocusAndMetering(action)
+                .addListener(() -> {
+                    // 对焦成功
+                }, executor);
     }
 
     private void bindPreview(ProcessCameraProvider cameraProvider, int facingLocal) {
@@ -911,7 +958,7 @@ public class PhotographFragment extends Fragment {
                 .build();
         //Toast.makeText(context, Integer.toString(facingLocal), Toast.LENGTH_SHORT).show();
 
-        cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture);
+        camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture);
 
         preview.setSurfaceProvider(previewView.getSurfaceProvider());
     }
@@ -919,15 +966,33 @@ public class PhotographFragment extends Fragment {
     public void onSwitchCameraButtonClick(View view) {
         if (facing == 1){
             facing = 0;
+            binding.switchFlashButton.setVisibility(View.INVISIBLE);
         }
         else if(facing == 0){
             facing = 1;
+            binding.switchFlashButton.setVisibility(View.VISIBLE);
         }
         cameraProviderFuture.addListener(() -> {
             cameraProvider.unbind(preview, imageCapture);
             initializeCamera();
         }, ContextCompat.getMainExecutor((requireContext())));
         saveEnv();
+    }
+
+    public void onswitchFlashButtonClick(View view) {
+        if (camera == null) return;
+
+        CameraControl cameraControl = camera.getCameraControl();
+        isFlashOn = !isFlashOn;
+
+        // 启用/禁用闪光灯
+        cameraControl.enableTorch(isFlashOn);
+
+        if (isFlashOn) {
+            binding.switchFlashButton.setImageResource(R.drawable.flash_on_128dp_434343_fill0_wght400_grad0_opsz48); // 闪光灯开启图标
+        } else {
+            binding.switchFlashButton.setImageResource(R.drawable.flash_off_128dp_434343_fill0_wght400_grad0_opsz48); // 闪光灯关闭图标
+        }
     }
 
     private File getOutputDirectory() {
@@ -941,12 +1006,15 @@ public class PhotographFragment extends Fragment {
         return outputDir;
     }
 
-    public void onTakePhotoButtonClick(View view) {
+    public void onTakePhotoButtonClick() {
         if (currentBmp == null){
             requireActivity().runOnUiThread(() ->
                     Toast.makeText(requireContext(), R.string.addLibAndSelectRequst, Toast.LENGTH_SHORT).show());
             return;
         }
+
+        vibrate(50);
+
         String format;
         try {
             format = settingObj.getString("photoNameFormat");
@@ -1146,19 +1214,7 @@ public class PhotographFragment extends Fragment {
 
             String imagePath = outputDirectory + "/" + photoName;
 
-            Vibrator vibrator = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
-            if (vibrator != null && vibrator.hasVibrator()) {
-                // API 26+ (Android 8.0+) 推荐方式
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    vibrator.vibrate(
-                            VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE)
-                    );
-                }
-                // 旧版本方式
-                else {
-                    vibrator.vibrate(100);
-                }
-            }
+            vibrate(100);
 
             String toastTexts = context.getString(R.string.picture);
             if (settingObj.getBoolean("exif")){
@@ -1378,6 +1434,21 @@ public class PhotographFragment extends Fragment {
             show();
         }
     }*/
+    public void vibrate(int Time){
+        Vibrator vibrator = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+        if (vibrator != null && vibrator.hasVibrator()) {
+            // API 26+ (Android 8.0+) 推荐方式
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                vibrator.vibrate(
+                        VibrationEffect.createOneShot(Time, VibrationEffect.DEFAULT_AMPLITUDE)
+                );
+            }
+            // 旧版本方式
+            else {
+                vibrator.vibrate(Time);
+            }
+        }
+    }
 
     private void hide() {
         if (!isFragmentVisible) return;
@@ -1422,4 +1493,28 @@ public class PhotographFragment extends Fragment {
         }
         return null;
     }
+
+    private void setupVolumeKeyListeners(View rootView) {
+        rootView.setOnKeyListener((v, keyCode, event) -> {
+            if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                switch (keyCode) {
+                    case KeyEvent.KEYCODE_VOLUME_DOWN:
+                    case KeyEvent.KEYCODE_VOLUME_UP:
+                        onTakePhotoButtonClick();
+                        return true;
+                }
+            }
+            return false;
+        });
+    }
+
+    /*private void handleVolumeDown() {
+        // 处理音量减
+        Toast.makeText(requireContext(), "音量减小", Toast.LENGTH_SHORT).show();
+    }
+
+    private void handleVolumeUp() {
+        // 处理音量加
+        Toast.makeText(requireContext(), "音量增加", Toast.LENGTH_SHORT).show();
+    }*/
 }
